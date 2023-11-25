@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="./style.css">
+  <link rel="icon" href="./tetris logo.png">
+  <title>Tetris</title>
+</head>
+<body>
+  <audio id="music-audio" autoplay loop>
+    <source src="./tetris-theme.mp3" type="audio/mp3">
+    Tu navegador no soporta el elemento de audio.
+  </audio>
+  <div class="layout">
+    <canvas id="canvas"></canvas>
+    <div class="stats-container">
+      <div class="next-shape-container">
+        <p class="next-shape-title">Next Shape:</p>
+        <canvas id="next-shape"></canvas>
+      </div>
+      <div class="stats">
+        <p class="stats-title">Stats</p>
+        <p id="total_lines">Total Lines: 0</p>
+        <p id="score">Score: 0</p>
+        <p id="single">Singles: 0</p>
+        <p id="double">Doubles: 0</p>
+        <p id="triple">Triples: 0</p>
+        <p id="tetris">Tetris: 0</p>
+      </div>
+    </div>
+  </div>
+</body>
+<script src="./script.js"></script>
+</html>
