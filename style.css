@@ -67,3 +67,19 @@ body {
   width: 100%;
   text-align: center;
 }
+
+.game-section {
+  display: none;
+  justify-content: center;
+  align-items: center;
+}
+
+.new-game h1 {
+  cursor: pointer;
+}
+
+@media(max-width: 375px) {
+  .stats-container {
+    display: none;
+  }
+}

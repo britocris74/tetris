@@ -8,27 +8,37 @@
   <title>Tetris</title>
 </head>
 <body>
-  <audio id="music-audio" autoplay loop>
+  <audio id="music-audio" loop>
     <source src="./tetris-theme.mp3" type="audio/mp3">
-    Tu navegador no soporta el elemento de audio.
+  </audio>
+  <audio id="game-over">
+    <source src="./game-over.mp3" type="audio/mp3">
+  </audio>
+  <audio id="explosion">
+    <source src="./8-bit-explosion.wav" type="audio/wav">
   </audio>
   <div class="layout">
-    <canvas id="canvas"></canvas>
-    <div class="stats-container">
-      <div class="next-shape-container">
-        <p class="next-shape-title">Next Shape:</p>
-        <canvas id="next-shape"></canvas>
+    <section id="game-section" class="game-section">
+      <canvas id="canvas"></canvas>
+      <div class="stats-container">
+        <div class="next-shape-container">
+          <p class="next-shape-title">Next Shape:</p>
+          <canvas id="next-shape"></canvas>
+        </div>
+        <div class="stats">
+          <p class="stats-title">Stats</p>
+          <p id="total_lines">Total Lines: 0</p>
+          <p id="score">Score: 0</p>
+          <p id="single">Singles: 0</p>
+          <p id="double">Doubles: 0</p>
+          <p id="triple">Triples: 0</p>
+          <p id="tetris">Tetris: 0</p>
+        </div>
       </div>
-      <div class="stats">
-        <p class="stats-title">Stats</p>
-        <p id="total_lines">Total Lines: 0</p>
-        <p id="score">Score: 0</p>
-        <p id="single">Singles: 0</p>
-        <p id="double">Doubles: 0</p>
-        <p id="triple">Triples: 0</p>
-        <p id="tetris">Tetris: 0</p>
-      </div>
-    </div>
+    </section>
+    <section id="new-game" class="new-game">
+      <h1>New Game</h1>
+    </section>
   </div>
 </body>
 <script src="./script.js"></script>

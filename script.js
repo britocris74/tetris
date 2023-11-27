@@ -2,9 +2,13 @@ const BLOCK_SIZE = 20
 const BOARD_WIDTH  = 14
 const BOARD_HEIGHT = 30
 let TIME_AUTO_DOWN_SHAPE = 1000
+let AUTO_DOWN_SHAPE_INTERVAL
+let LEVEL = 0
+let LINES_TO_NEXT_LEVEL = 10
 
 const posibleShapes = [
   {
+    id: 1,
     color: '#7a5e0b',
     shape: [
       [1,1],
@@ -12,47 +16,53 @@ const posibleShapes = [
     ],
   },
   {
+    id: 2,
     color: '#d77f37',
     shape: [
-      [1, 0],
-      [1, 0],
-      [1, 1],
+      [2, 0],
+      [2, 0],
+      [2, 2],
     ],
   },
   {
+    id: 3,
     color: '#00358d',
     shape: [
-      [0, 1],
-      [0, 1],
-      [1, 1],
+      [0, 3],
+      [0, 3],
+      [3, 3],
     ],
   },
   {
+    id: 4,
     color: '#7d2166',
     shape: [
-      [1, 0],
-      [1, 1],
-      [1, 0],
+      [4, 0],
+      [4, 4],
+      [4, 0],
     ],
   },
   {
+    id: 5,
     color: '#d7364e',
     shape: [
-      [1, 1, 0],
-      [0, 1, 1],
+      [5, 5, 0],
+      [0, 5, 5],
     ],
   },
   {
+    id: 6,
     color: '#459b52',
     shape: [
-      [0, 1, 1],
-      [1, 1, 0],
+      [0, 6, 6],
+      [6, 6, 0],
     ],
   },
   {
+    id: 7,
     color: '#4e7e96',
     shape: [
-      [1, 1, 1, 1],
+      [7, 7, 7, 7],
     ],
   }
 ]
@@ -107,6 +117,7 @@ canvas.height = BLOCK_SIZE * BOARD_HEIGHT
 
 let shape = []
 let nextShape = []
+let shapeCollapsedPreview = {}
 
 // 1. Crear tablero logico
 function createDashBorad() {
@@ -126,6 +137,7 @@ function generateShape() {
   return (shape)
 }
 shape = generateShape()
+showCurrentShapePreview()
 nextShape = getNextShape()
 
 // 3. Game Loop
@@ -138,25 +150,33 @@ function draw() {
   context.fillStyle = '#000'
   context.fillRect(0, 0, BLOCK_SIZE * BOARD_WIDTH, BLOCK_SIZE * BOARD_HEIGHT)
   drawBlocksInDashboard()
-  drawShapeInDashboard()
+  drawShapeInDashboard(shape)
+  drawShapeInDashboard(shapeCollapsedPreview)
 }
 
 // 4. Dibujar Bloques en el tablero
 function drawBlocksInDashboard() {
   dashBorad.forEach((row, x) => row.forEach((col, y) => {
+    context.strokeStyle = 'rgba(235, 235, 235, 0.15)'
+    context.strokeRect(y * BLOCK_SIZE, x * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE)
     if (col) {
-      context.fillStyle = "grey"
+      const currentShapeToDraw = posibleShapes.find((shape) => shape.id == col)
+      context.fillStyle = currentShapeToDraw.color
       context.fillRect(y * BLOCK_SIZE, x * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE)
+      context.strokeStyle = '#000'
+      context.strokeRect(y * BLOCK_SIZE, x * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE)
     }
   }))
 }
 
 // 5. Dibujar figura en el tablero
-function drawShapeInDashboard() {
+function drawShapeInDashboard(shape) {
   shape.shape.forEach((row, y) => row.forEach((col, x) => {
     if (col) {
       context.fillStyle = shape.color
       context.fillRect((x + shape.position.x) * BLOCK_SIZE, (y + shape.position.y) * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE)
+      context.strokeStyle = 'rgba(0, 0, 0, 1)'
+      context.strokeRect((x + shape.position.x) * BLOCK_SIZE, (y + shape.position.y) * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE)
     }
   }))
 }
@@ -167,30 +187,35 @@ window.addEventListener("keydown", (event) => {
     shape.position.x--
     if (detectShapeCollision(shape)) {
       shape.position.x++
+    } else {
+      showCurrentShapePreview()
     }
   }
   if (event.key === "ArrowRight") {
     shape.position.x++
     if (detectShapeCollision(shape)) {
       shape.position.x--
+    } else {
+      showCurrentShapePreview()
     }
   }
   if (event.key === "ArrowDown") {
-    arrowDown()
+    arrowDown(shape)
   }
   if (event.key === 'ArrowUp') {
     rotateShape()
+    showCurrentShapePreview()
   }
   if (event.key === ' ') {
     let stopArrowDown = false
     while (!stopArrowDown) {
-      stopArrowDown = arrowDown()
+      stopArrowDown = arrowDown(shape)
     }
   }
 })
 
 // Function ArrowDown para reutilizar
-function arrowDown() {
+function arrowDown(shape) {
   shape.position.y++
   const collision = detectShapeCollision(shape)
   if (collision) {
@@ -218,10 +243,13 @@ function solidifyShapeInDashboard() {
   shape.shape.forEach((row, y) => {
     row.forEach((col, x) => {
       if (col) {
-        dashBorad[y + shape.position.y][x + shape.position.x] = 1
+        dashBorad[y + shape.position.y][x + shape.position.x] = col
       }
     })
   })
+  const explosion = document.getElementById('explosion')
+  explosion.volume = 0.25
+  explosion.play()
 
   shape = nextShape
   gameOver(shape)
@@ -243,6 +271,7 @@ function clearDashboardLines() {
     }
   })
   addScoreAndStats(linesCleared)
+  showCurrentShapePreview()
 }
 
 // 9.Rotar Piezas
@@ -262,18 +291,26 @@ function rotateShape() {
     newShape = shape.shape
   } else {
     shape.shape = newShape
+    /* showCurrentShapePreview() */
   }
 
 }
 
 // 10. Bajar la pieza automaticamente
 function autoDownShape() {
-  arrowDown()
+  arrowDown(shape)
 }
-setInterval(autoDownShape, TIME_AUTO_DOWN_SHAPE)
+AUTO_DOWN_SHAPE_INTERVAL = setInterval(autoDownShape, TIME_AUTO_DOWN_SHAPE)
 
 // 11. Clear and start new Game
 function clearNewGame() {
+  document.getElementById('new-game').style.display = 'block'
+  document.getElementById('game-section').style.display = 'none'
+  /* document.getElementById('music-audio').play() */
+  clearInterval(AUTO_DOWN_SHAPE_INTERVAL)
+  LEVEL = 1
+  TIME_AUTO_DOWN_SHAPE = 1000
+  AUTO_DOWN_SHAPE_INTERVAL = setInterval(autoDownShape, TIME_AUTO_DOWN_SHAPE)
   dashBorad = createDashBorad()
   update()
   shape = generateShape()
@@ -294,18 +331,21 @@ function clearNewGame() {
 // 11. Next Shape 
 function getNextShape() {
   let canvas = document.getElementById('next-shape')
-  let nextShapeContext = canvas.getContext('2d')
-  canvas.width = BLOCK_SIZE * 4
-  canvas.height = BLOCK_SIZE * 4
-  nextShapeContext.fillStyle = '#000'
-  nextShapeContext.fillRect(1, 1, canvas.width, canvas.height)
   const nextShape = generateShape()
-  nextShape.shape.forEach((row, x) => row.forEach((colunm, y) => {
-    if (colunm) {
-      nextShapeContext.fillStyle = nextShape.color
-      nextShapeContext.fillRect(y * BLOCK_SIZE, x * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE)
-    }
-  }))
+  if (canvas) {
+    let nextShapeContext = canvas.getContext('2d')
+    canvas.width = BLOCK_SIZE * 4
+    canvas.height = BLOCK_SIZE * 4
+    nextShapeContext.fillStyle = '#000'
+    nextShapeContext.fillRect(1, 1, canvas.width, canvas.height)
+    nextShape.shape.forEach((row, x) => row.forEach((colunm, y) => {
+      if (colunm) {
+        nextShapeContext.fillStyle = nextShape.color
+        nextShapeContext.fillRect(y * BLOCK_SIZE, x * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE)
+        nextShapeContext.strokeRect(y * BLOCK_SIZE, x * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE)
+      }
+    }))
+  }
   return nextShape
 }
 
@@ -313,6 +353,8 @@ function getNextShape() {
 function gameOver() {
   const collision = detectShapeCollision(shape)
   if (collision) {
+    document.getElementById('music-audio').pause()
+    document.getElementById('game-over').play()
     alert("Game Over: :(")
     clearNewGame()
   }
@@ -328,7 +370,46 @@ function addScoreAndStats(linesCleared) {
         totalLinesTag.innerHTML = `Total Lines: ${totalLines += linesCleared}`
       }
     })
+    shapesDownMoreFaster()
   }
 }
+
+// 14 Hacer que las piezas caigan mas rápido
+function shapesDownMoreFaster () {
+  let isNextLevel = Math.floor((totalLines / LINES_TO_NEXT_LEVEL))
+  if (isNextLevel > LEVEL) {
+    LEVEL++
+    if (TIME_AUTO_DOWN_SHAPE > 100) {
+      clearInterval(AUTO_DOWN_SHAPE_INTERVAL)
+      TIME_AUTO_DOWN_SHAPE = 1000 - Math.floor((totalLines / LINES_TO_NEXT_LEVEL) * 150)
+      AUTO_DOWN_SHAPE_INTERVAL = setInterval(autoDownShape, TIME_AUTO_DOWN_SHAPE)
+    }
+  }
+}
+
+// 14. Mostrar el preview de la pieza actual en el tablero
+function showCurrentShapePreview() {
+  shapeCollapsedPreview = JSON.parse(JSON.stringify(shape))
+  let stopArrowDown = false
+  while (!stopArrowDown) {
+    const collision = detectShapeCollision(shapeCollapsedPreview)
+    if (collision) {
+      shapeCollapsedPreview.position.y --
+      stopArrowDown = true
+    } else {
+      shapeCollapsedPreview.position.y ++
+    }
+  }
+}
+
+// 15 Comenzar un juego nuevo
+document.getElementById('new-game').addEventListener('click', function() {
+  document.getElementById('new-game').style.display = 'none'
+  document.getElementById('game-section').style.display = 'flex'
+  const gameAudio = document.getElementById('music-audio')
+  gameAudio.currentTime = 0
+  gameAudio.volume = 0.5
+  gameAudio.play()
+})
 
 update()
