@@ -150,8 +150,8 @@ function draw() {
   context.fillStyle = '#000'
   context.fillRect(0, 0, BLOCK_SIZE * BOARD_WIDTH, BLOCK_SIZE * BOARD_HEIGHT)
   drawBlocksInDashboard()
+  drawShapeInDashboard(shapeCollapsedPreview, true)
   drawShapeInDashboard(shape)
-  drawShapeInDashboard(shapeCollapsedPreview)
 }
 
 // 4. Dibujar Bloques en el tablero
@@ -170,12 +170,18 @@ function drawBlocksInDashboard() {
 }
 
 // 5. Dibujar figura en el tablero
-function drawShapeInDashboard(shape) {
+function drawShapeInDashboard(shape, previewShape) {
   shape.shape.forEach((row, y) => row.forEach((col, x) => {
-    if (col) {
-      context.fillStyle = shape.color
+    /* if (col) {
+      context.fillStyle = previewShape ? `${shape.color}60` : shape.color
       context.fillRect((x + shape.position.x) * BLOCK_SIZE, (y + shape.position.y) * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE)
       context.strokeStyle = 'rgba(0, 0, 0, 1)'
+      context.strokeRect((x + shape.position.x) * BLOCK_SIZE, (y + shape.position.y) * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE)
+    } */
+    if (col) {
+      context.fillStyle = previewShape ? '#000': shape.color
+      context.fillRect((x + shape.position.x) * BLOCK_SIZE, (y + shape.position.y) * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE)
+      context.strokeStyle = previewShape ? shape.color : 'rgba(0, 0, 0, 1)'
       context.strokeRect((x + shape.position.x) * BLOCK_SIZE, (y + shape.position.y) * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE)
     }
   }))
